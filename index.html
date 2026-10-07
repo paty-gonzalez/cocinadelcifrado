@@ -1,0 +1,735 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>La Cocina del Cifrado</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+/* Layout: lección en secciones numeradas (una secuencia real), cada una con su demo vivo y su "para qué".
+   Dos mundos: laboratorio claro / consola nocturna. Un acento índigo (cripto) + un verde-teal (seguro). */
+:root{
+  --bg:#eceef4; --surface:#ffffff; --panel:#e6e9f1; --ink:#191c26; --muted:#5a6273;
+  --accent:#5a53d6; --accent-2:#0c9a8b; --warn:#b5720f; --danger:#be3626;
+  --line:#d2d7e3; --console:#1a1d2b; --console-ink:#e8eaf4; --console-dim:#8b90ab;
+  --shadow:0 1px 0 rgba(20,22,40,.03),0 14px 34px rgba(30,30,60,.09);
+  --f-body:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --f-disp:"Syne","Archivo",system-ui,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0e0f16; --surface:#161925; --panel:#1c2030; --ink:#e7e9f3; --muted:#99a0b4;
+  --accent:#8f88ff; --accent-2:#2ad4bf; --warn:#f0a94c; --danger:#ff6f5c;
+  --line:#2a2e42; --console:#090a10; --console-ink:#e8eaf4; --console-dim:#767c99;
+  --shadow:0 1px 0 rgba(0,0,0,.4),0 18px 38px rgba(0,0,0,.5);
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0e0f16; --surface:#161925; --panel:#1c2030; --ink:#e7e9f3; --muted:#99a0b4;
+  --accent:#8f88ff; --accent-2:#2ad4bf; --warn:#f0a94c; --danger:#ff6f5c;
+  --line:#2a2e42; --console:#090a10; --console-ink:#e8eaf4; --console-dim:#767c99;
+  --shadow:0 1px 0 rgba(0,0,0,.4),0 18px 38px rgba(0,0,0,.5);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);line-height:1.6}
+.wrap{max-width:760px;margin:0 auto;padding-inline:18px;padding-block:0 72px}
+h1,h2,h3{text-wrap:balance;margin:0;font-family:var(--f-disp);letter-spacing:-.01em}
+p{margin:0 0 12px}
+code{font-family:var(--f-mono);font-size:.9em;background:var(--panel);padding:1px 6px;border-radius:5px}
+a{color:var(--accent)}
+
+/* progreso */
+.rail{position:fixed;top:0;left:0;height:3px;background:var(--accent);width:0;z-index:40;transition:width .15s}
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:color-mix(in srgb,var(--bg) 88%,transparent);
+  backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.topbar .inner{max-width:760px;margin:0 auto;padding:9px 18px;display:flex;align-items:center;gap:10px}
+.kicker{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.themebtn{margin-left:auto;border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:8px;width:34px;height:30px;cursor:pointer}
+
+/* hero */
+.hero{padding-block:46px 30px}
+.hero h1{font-size:clamp(2.1rem,7vw,3.3rem);font-weight:800;line-height:1.02}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.hook{font-size:1.14rem;color:var(--ink);margin-top:18px;max-width:60ch}
+.hook b{color:var(--accent-2)}
+.scrolltip{font-family:var(--f-mono);font-size:.72rem;color:var(--muted);margin-top:22px;letter-spacing:.08em}
+
+/* secciones */
+section.block{padding-block:30px;border-top:1px solid var(--line)}
+.ey{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.ey .no{font-family:var(--f-mono);font-weight:700;font-size:.78rem;color:#fff;background:var(--accent);
+  width:26px;height:26px;border-radius:7px;display:grid;place-items:center}
+.ey span{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+h2{font-size:clamp(1.5rem,4.5vw,2rem);font-weight:700;margin-bottom:12px}
+.para-que{display:flex;gap:11px;align-items:flex-start;background:color-mix(in srgb,var(--accent-2) 12%,transparent);
+  border:1px solid color-mix(in srgb,var(--accent-2) 38%,transparent);border-radius:11px;padding:12px 14px;margin:14px 0;font-size:.95rem}
+.para-que b{color:var(--accent-2)}
+.para-que .ic{font-size:1.1rem;line-height:1.4}
+
+/* timeline historia */
+.timeline{display:grid;gap:0;margin:16px 0;border-left:2px solid var(--line);padding-left:16px}
+.tl{position:relative;padding:8px 0}
+.tl::before{content:"";position:absolute;left:-23px;top:14px;width:9px;height:9px;border-radius:50%;background:var(--accent);border:2px solid var(--bg)}
+.tl b{font-family:var(--f-mono);font-size:.8rem;color:var(--accent)}
+.tl .t{font-weight:600}
+
+/* demos */
+.demo{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:18px;margin:16px 0}
+.demo h3{font-family:var(--f-body);font-size:.82rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;font-weight:600}
+label{display:block;font-size:.82rem;color:var(--muted);margin:10px 0 5px;font-weight:500}
+input[type=text],textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:10px 12px;
+  color:var(--ink);font-family:var(--f-mono);font-size:.92rem;resize:vertical}
+input:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.out{font-family:var(--f-mono);font-size:.9rem;background:var(--console);color:var(--console-ink);border-radius:9px;
+  padding:12px 14px;word-break:break-all;min-height:1.2em;line-height:1.6}
+.out .dim{color:var(--console-dim)}
+.btn{background:var(--accent);color:#fff;border:0;border-radius:9px;padding:9px 16px;font-weight:600;cursor:pointer;font-family:inherit;font-size:.9rem}
+.btn:hover{filter:brightness(1.07)}
+.btn.sec{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+.row{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.slideval{font-family:var(--f-mono);font-weight:700;color:var(--accent)}
+
+/* triage 3 columnas */
+.triage{display:grid;grid-template-columns:1fr;gap:10px;margin-top:12px}
+@media(min-width:640px){.triage{grid-template-columns:repeat(3,1fr)}}
+.tcard{border:1px solid var(--line);border-radius:11px;padding:12px;background:var(--panel)}
+.tcard .h{font-weight:700;font-size:.92rem;margin-bottom:2px}
+.tcard .tag{font-family:var(--f-mono);font-size:.64rem;letter-spacing:.06em;text-transform:uppercase;display:inline-block;
+  padding:2px 7px;border-radius:99px;margin-bottom:8px}
+.tag.cod{background:color-mix(in srgb,var(--warn) 20%,transparent);color:var(--warn)}
+.tag.cif{background:color-mix(in srgb,var(--accent) 20%,transparent);color:var(--accent)}
+.tag.hsh{background:color-mix(in srgb,var(--accent-2) 20%,transparent);color:var(--accent-2)}
+.tcard .v{font-family:var(--f-mono);font-size:.76rem;word-break:break-all;color:var(--ink);background:var(--console);
+  color:var(--console-ink);padding:8px;border-radius:7px;min-height:3.4em;margin-top:6px}
+.tcard .note{font-size:.78rem;color:var(--muted);margin-top:7px}
+
+.keybox{display:grid;grid-template-columns:1fr;gap:12px;margin-top:10px}
+@media(min-width:560px){.keybox{grid-template-columns:1fr 1fr}}
+.keycol{border:1px dashed var(--line);border-radius:10px;padding:12px}
+.keycol.pub{border-color:color-mix(in srgb,var(--accent-2) 50%,transparent)}
+.keycol.priv{border-color:color-mix(in srgb,var(--accent) 50%,transparent)}
+.keycol .lab{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase}
+.pub .lab{color:var(--accent-2)} .priv .lab{color:var(--accent)}
+.feedback{font-family:var(--f-mono);font-size:.82rem;margin-top:8px;min-height:1.1em}
+.feedback.ok{color:var(--accent-2)} .feedback.no{color:var(--danger)}
+
+/* https flow */
+.flow{display:grid;gap:8px;margin:14px 0}
+.step{display:flex;gap:11px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 13px;font-size:.92rem}
+.step .n{font-family:var(--f-mono);font-weight:700;color:var(--accent);flex:none}
+
+/* quiz cierre */
+.q{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;margin:12px 0;box-shadow:var(--shadow)}
+.q .qt{font-weight:600;margin-bottom:10px}
+.opt{display:block;width:100%;text-align:left;border:1px solid var(--line);background:var(--bg);color:var(--ink);
+  border-radius:9px;padding:10px 13px;margin-bottom:8px;cursor:pointer;font-family:inherit;font-size:.9rem}
+.opt:hover{border-color:var(--accent)}
+.opt.right{border-color:var(--accent-2);background:color-mix(in srgb,var(--accent-2) 14%,transparent)}
+.opt.wrong{border-color:var(--danger);background:color-mix(in srgb,var(--danger) 12%,transparent)}
+.qexp{font-size:.86rem;color:var(--muted);margin-top:6px;min-height:1em}
+.foot{color:var(--muted);font-size:.8rem;text-align:center;margin-top:34px;font-family:var(--f-mono)}
+/* --- disco de césar --- */
+.wheelwrap{display:grid;grid-template-columns:1fr;gap:18px;align-items:center}
+@media(min-width:640px){.wheelwrap{grid-template-columns:300px 1fr}}
+#wheel{width:100%;max-width:300px;margin:0 auto;display:block}
+#wheel text{font-family:var(--f-mono);font-size:15px;font-weight:500;fill:var(--ink);user-select:none}
+.ring-bg{fill:none;stroke:var(--line);stroke-width:1.5}
+#ring-in{transform-box:view-box;transform-origin:200px 200px;transition:transform .55s cubic-bezier(.2,.8,.2,1)}
+#wheel text.lit-out,#wheel text.lit-in{fill:#fff;font-weight:700}
+#wheel circle.lit-out{fill:var(--accent)}
+#wheel circle.lit-in{fill:var(--accent-2)}
+.hub{fill:var(--panel);stroke:var(--line);stroke-width:1.5}
+#pointer line{stroke:var(--accent);stroke-width:2.5;stroke-linecap:round}
+.spellout{font-family:var(--f-mono);font-size:1.4rem;letter-spacing:.1em;min-height:1.6em;color:var(--accent);word-break:break-all;margin-top:4px}
+.spellout .cur{background:var(--accent);color:#fff;border-radius:4px;padding:0 4px}
+.mapline{font-family:var(--f-mono);font-size:1rem;color:var(--muted);min-height:1.3em;margin-top:8px}
+.mapline b{color:var(--ink)}
+/* --- rsa extra --- */
+.rsa-explain{display:grid;gap:12px;margin:14px 0}
+@media(min-width:620px){.rsa-explain{grid-template-columns:1fr 1fr}}
+.rcard{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--surface)}
+.rcard h4{margin:0 0 6px;font-family:var(--f-body);font-size:.98rem}
+.rcard.pub h4{color:var(--accent-2)} .rcard.priv h4{color:var(--accent)}
+.rcard p{font-size:.92rem;color:var(--muted);margin:0}
+details.qa{border:1px solid var(--line);border-radius:10px;padding:11px 15px;background:var(--panel);margin:12px 0}
+details.qa summary{cursor:pointer;font-weight:600;color:var(--accent)}
+details.qa p{margin:10px 0 0;font-size:.93rem;color:var(--ink)}
+.usechips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.usechips span{font-family:var(--f-mono);font-size:.74rem;border:1px solid var(--line);border-radius:99px;padding:4px 11px;color:var(--muted)}
+/* --- modo presentación --- */
+#presentNav{position:fixed;left:0;right:0;bottom:0;z-index:60;display:none;gap:10px;align-items:center;justify-content:center;
+  padding:10px;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));background:color-mix(in srgb,var(--bg) 92%,transparent);
+  border-top:1px solid var(--line);backdrop-filter:blur(8px)}
+body.present #presentNav{display:flex}
+#presentNav button{background:var(--surface);border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:9px 15px;cursor:pointer;font-family:var(--f-mono);font-size:.9rem}
+#presentNav button:hover{border-color:var(--accent)}
+#presentNav #pCount{font-family:var(--f-mono);font-size:.85rem;color:var(--muted);min-width:62px;text-align:center}
+body.present .topbar,body.present .rail,body.present #tray,body.present .foot{display:none!important}
+body.present .wrap{max-width:none;padding:0}
+body.present .hero,body.present section.block{display:none}
+body.present .slide-current{display:flex!important;flex-direction:column;justify-content:center;
+  min-height:100svh;max-width:1180px;margin:0 auto;padding:4vh 6vw 14vh;border-top:0;overflow:auto}
+body.present .slide-current h1{font-size:clamp(2.3rem,5.4vw,3.9rem)}
+body.present .slide-current h2{font-size:clamp(1.7rem,4vw,2.9rem);margin-bottom:18px}
+body.present .slide-current p,body.present .slide-current .obj{font-size:clamp(1.05rem,2vw,1.45rem)}
+body.present .slide-current .para-que{font-size:clamp(1rem,1.7vw,1.3rem)}
+/* --- comparación un lado / dos lados --- */
+.compare{display:grid;grid-template-columns:1fr;gap:12px;margin:14px 0}
+@media(min-width:680px){.compare{grid-template-columns:1fr 1fr}}
+.scene{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--surface)}
+.scene h4{margin:0 0 10px;font-family:var(--f-body);font-size:1rem}
+.scene.sym h4{color:var(--accent)} .scene.asym h4{color:var(--accent-2)}
+.stage{position:relative;height:70px;background:var(--panel);border-radius:10px;overflow:hidden;display:flex;align-items:center;padding:0 12px}
+.actor{font-size:.95rem;z-index:2;white-space:nowrap}
+.actor.right{margin-left:auto}
+.pkg{position:absolute;left:66px;top:50%;margin-top:-16px;font-size:1.7rem;z-index:3;transition:left 1.2s cubic-bezier(.4,0,.2,1)}
+.compare.playing .pkg{left:calc(100% - 92px)}
+.scene .cap{font-size:.9rem;color:var(--ink);margin:10px 0 0}
+.scene .ej{font-size:.88rem;margin-top:9px;color:var(--ink);border-radius:8px;padding:9px 11px;background:color-mix(in srgb,var(--accent) 9%,transparent)}
+.scene.asym .ej{background:color-mix(in srgb,var(--accent-2) 11%,transparent)}
+.same{color:var(--accent);font-weight:700} .diff{color:var(--accent-2);font-weight:700}
+/* --- truco de las pinturas --- */
+.paint{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:16px;margin:14px 0}
+.paint h4{margin:0 0 4px;font-family:var(--f-body);font-size:1rem}
+.paintrow{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;align-items:flex-start;margin:12px 0}
+.swatch{width:62px;text-align:center;font-family:var(--f-mono);font-size:.66rem;color:var(--muted);line-height:1.25}
+.swatch .dot{width:46px;height:46px;border-radius:50%;margin:0 auto 5px;border:2px solid var(--line);background:#c9ccc2;transition:background .6s}
+.paintstep{font-size:.93rem;min-height:2.6em;margin-top:4px;color:var(--ink)}
+.eve{font-size:.85rem;color:var(--ink);margin-top:10px;background:var(--panel);border-radius:8px;padding:9px 12px}
+.eve b{color:var(--danger)}
+/* --- dos formas: reveal paso a paso --- */
+.compare2{display:grid;grid-template-columns:1fr;gap:12px;margin:14px 0}
+@media(min-width:680px){.compare2{grid-template-columns:1fr 1fr}}
+.compare2 .scene{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--surface)}
+.compare2 .scene h4{margin:0 0 10px;font-family:var(--f-body);font-size:1rem}
+.compare2 .scene.sym h4{color:var(--accent)} .compare2 .scene.asym h4{color:var(--accent-2)}
+.fsteps{display:grid;gap:9px}
+.fs{display:flex;gap:10px;align-items:flex-start;font-size:.95rem;opacity:.22;transform:translateX(-5px);transition:opacity .4s,transform .4s}
+.fs.on{opacity:1;transform:none}
+.fsic{font-size:1.2rem;line-height:1.15;flex:none}
+.punch{margin-top:11px;font-weight:700;opacity:0;transition:opacity .45s}
+.punch.on{opacity:1}
+/* --- retos "pruébalo" --- */
+.reto{display:flex;gap:10px;align-items:flex-start;background:color-mix(in srgb,var(--accent-2) 10%,transparent);
+  border:1px dashed color-mix(in srgb,var(--accent-2) 52%,transparent);border-radius:10px;padding:11px 13px;margin-top:14px;font-size:.92rem}
+.reto b{color:var(--accent-2)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="rail" id="rail"></div>
+<div class="topbar"><div class="inner">
+  <span class="kicker">La Cocina del Cifrado · U2</span>
+  <button class="themebtn" id="presentBtn" title="Modo presentación" style="margin-left:auto;width:auto;padding:0 12px;font-family:var(--f-mono);font-size:.78rem">▦ Modo clase</button>
+  <button class="themebtn" id="theme" aria-label="Cambiar tema">◐</button>
+</div></div>
+
+<div id="presentNav">
+  <button id="pExit">✕ Salir</button>
+  <button id="pPrev">‹ Atrás</button>
+  <span id="pCount">1 / 9</span>
+  <button id="pNext">Siguiente ›</button>
+</div>
+
+<div class="wrap">
+
+  <header class="hero">
+    <h1>¿Qué pasa cuando escribes tu <em>contraseña</em> en el WiFi del café?</h1>
+    <p class="hook">Alguien en la misma red podría estar escuchando. Y sin embargo tu sesión no se roba.
+    Hay algo trabajando en silencio detrás de ese <b>candado 🔒</b> del navegador. Hoy abrimos la cocina y vemos la receta — y la vas a correr tú mismo, aquí, en esta página.</p>
+    <p class="scrolltip">↓ baja y toca todo</p>
+  </header>
+
+  <!-- 1. PARA QUÉ -->
+  <section class="block">
+    <div class="ey"><span class="no">1</span><span>El para qué</span></div>
+    <h2>Esto no es teoría: lo usas cientos de veces al día</h2>
+    <p>Cada vez que mandas un WhatsApp, pagas en línea, te conectas al WiFi o ves el candadito en la barra del navegador,
+    <b>el cifrado está corriendo</b>. Es la diferencia entre que tu contraseña viaje en un sobre cerrado o en una postal que cualquiera lee.</p>
+    <div class="para-que"><span class="ic">🎯</span><div><b>Al terminar vas a poder:</b> explicar qué pasa detrás del 🔒, distinguir cuándo un dato está <i>protegido</i> y cuándo solo está <i>disfrazado</i>, y elegir la herramienta correcta para proteger información. Eso es lo que te van a preguntar en una entrevista y en tu primer trabajo de seguridad.</div></div>
+  </section>
+
+  <!-- 2. QUÉ ES / DE DÓNDE SALE -->
+  <section class="block">
+    <div class="ey"><span class="no">2</span><span>Qué es y de dónde sale</span></div>
+    <h2>Cifrar = transformar un mensaje para que solo quien tiene la llave lo lea</h2>
+    <p>No es un invento moderno. La idea de ocultar un mensaje con una <b>regla + una llave</b> tiene más de dos mil años.
+    Lo que cambió es qué tan difícil es romperla.</p>
+    <div class="timeline">
+      <div class="tl"><b>s. V a.C.</b><div class="t">Escítala espartana</div>Enrollaban una cinta en un bastón de cierto grosor; el grosor <i>era</i> la llave.</div>
+      <div class="tl"><b>~50 a.C.</b><div class="t">Cifrado César</div>Julio César corría cada letra 3 lugares. Reversible con la llave (el desplazamiento). <i>Pruébalo abajo.</i></div>
+      <div class="tl"><b>s. IX</b><div class="t">Al-Kindi · análisis de frecuencias</div>El primer "hackeo": si la E es la letra más común, la letra más repetida del cifrado probablemente es E. Así murieron los cifrados simples.</div>
+      <div class="tl"><b>1939–45</b><div class="t">Enigma</div>Máquina alemana con llave que cambiaba cada día. Romperla (Turing, Bletchley Park) acortó la guerra.</div>
+      <div class="tl"><b>1976–77</b><div class="t">Diffie-Hellman y RSA</div>La gran idea moderna: cifrar con una llave <i>pública</i> y descifrar con otra <i>privada</i>. Es lo que hace posible el 🔒 de hoy.</div>
+    </div>
+
+    <div class="demo">
+      <h3>Demo · El disco de César</h3>
+      <div class="wheelwrap">
+        <svg id="wheel" viewBox="0 0 400 400" role="img" aria-label="Disco de cifrado de César con dos anillos de letras">
+          <circle class="ring-bg" cx="200" cy="200" r="186"></circle>
+          <circle class="ring-bg" cx="200" cy="200" r="140"></circle>
+          <g id="ring-out"></g>
+          <g id="ring-in"></g>
+          <g id="pointer"></g>
+          <circle class="hub" cx="200" cy="200" r="30"></circle>
+        </svg>
+        <div class="wheelside">
+          <label for="cesarIn">Mensaje</label>
+          <input type="text" id="cesarIn" value="ataque al amanecer" autocomplete="off">
+          <label for="cesarShift">Gira el disco de adentro · llave = <span class="slideval" id="cesarVal">3</span></label>
+          <input type="range" id="cesarShift" min="0" max="25" value="3">
+          <div class="row"><button class="btn" id="spellBtn">▶ Deletrear letra por letra</button></div>
+          <div class="mapline" id="mapline"></div>
+          <div class="spellout" id="spellout"></div>
+          <label>Resultado completo</label>
+          <div class="out" id="cesarOut"></div>
+        </div>
+      </div>
+      <div class="para-que"><span class="ic">💡</span><div><b>Para qué sirve:</b> el disco hace visible que un cifrado = <i>regla + llave</i>. El anillo de afuera es tu mensaje; el de adentro, girado por la llave, dice en qué letra "cae" cada una. Con la misma llave giras al revés y lo recuperas. Y por qué murió: solo hay 25 giros posibles, se prueban a mano (fuerza bruta).</div></div>
+    </div>
+    <div class="reto">🧪 <div><b>Pruébalo:</b> pon la llave en <b>7</b> y escribe tu nombre — ¿qué sale? Luego dale "Deletrear" a la palabra <code>HOLA</code> con llave <b>3</b> y fíjate en qué letra cae cada una.</div></div>
+  </section>
+
+  <!-- 3. TRIAGE -->
+  <section class="block">
+    <div class="ey"><span class="no">3</span><span>El triage del analista</span></div>
+    <h2>Codificar ≠ Cifrar ≠ Hashear</h2>
+    <p>Este es el error #1: ver un texto raro y decir "está encriptado". Escribe algo y míralo caer en las tres categorías <b>a la vez</b>:</p>
+    <label for="triageIn">Escribe aquí</label>
+    <input type="text" id="triageIn" value="birria2026" autocomplete="off">
+    <div class="triage">
+      <div class="tcard"><div class="tag cod">Codificación</div><div class="h">Base64</div>
+        <div class="v" id="t_b64"></div>
+        <div class="note">Se lee <b>sin llave</b>. Solo cambia el formato. Cero seguridad.</div></div>
+      <div class="tcard"><div class="tag cif">Cifrado</div><div class="h">César (llave 5)</div>
+        <div class="v" id="t_cif"></div>
+        <div class="note">Se revierte <b>con la llave</b>. Oculta el mensaje.</div></div>
+      <div class="tcard"><div class="tag hsh">Hash</div><div class="h">SHA-256</div>
+        <div class="v" id="t_hash"></div>
+        <div class="note"><b>No se revierte.</b> Huella única. Para contraseñas e integridad.</div></div>
+    </div>
+    <div class="para-que"><span class="ic">💡</span><div><b>Para qué sirve:</b> ante un dato sospechoso en un pentest, el triage de 3 preguntas — ¿se lee sin llave? ¿con llave? ¿no se revierte? — te dice si vas a <i>decodificar</i>, si necesitas <i>la llave</i>, o si estás ante un <i>hash</i> que no se "desencripta" (se compara o se crackea, otra historia).</div></div>
+    <div class="reto">🧪 <div><b>Pruébalo:</b> escribe una contraseña inventada y di cuál de las 3 columnas <b>sí</b> podrías revertir y cuál <b>nunca</b>, aunque quisieras.</div></div>
+  </section>
+
+  <!-- 4. SIMÉTRICO -->
+  <section class="block">
+    <div class="ey"><span class="no">4</span><span>Aplicado · simétrico</span></div>
+    <h2>AES: una sola llave abre y cierra</h2>
+    <p>El cifrado moderno de verdad. <b>AES</b> (Advanced Encryption Standard) usa <b>la misma llave</b> para cifrar y descifrar. Es rápido y protege grandes cantidades de datos.
+    Esto que corre abajo es AES-256 real, en tu navegador — no una simulación.</p>
+    <div class="rsa-explain">
+      <div class="rcard"><h4>🌍 Es el candado que usa el mundo</h4><p>Estándar oficial desde 2001 (lo eligió el NIST en un concurso público). Hoy va por dentro de los bancos, WhatsApp, tu WiFi (WPA2) y los discos cifrados. Si algo "está cifrado de verdad", casi siempre es AES.</p></div>
+      <div class="rcard"><h4>🔢 El "256" es el tamaño de la llave</h4><p>256 bits = tantas combinaciones que ni con todas las computadoras del planeta juntas se prueban una por una. Es el nivel que las apps venden como "grado militar".</p></div>
+    </div>
+    <p>Comparado con el César (25 llaves, lo rompes a mano), AES tiene un número de llaves tan absurdamente grande que probarlas todas es imposible. Por eso el César se <i>enseña</i> y AES se <i>usa</i>. Y como es <b>simétrico</b>, es <b>rapidísimo</b>: por eso sirve para cifrar cosas pesadas (un disco entero, un video, toda tu sesión de WiFi).</p>
+    <div class="demo">
+      <h3>Demo · AES-256 real (Web Crypto)</h3>
+      <label for="aesMsg">Mensaje</label>
+      <input type="text" id="aesMsg" value="la junta es el viernes a las 9" autocomplete="off">
+      <label for="aesKey">Llave (passphrase)</label>
+      <input type="text" id="aesKey" value="birria-secreta" autocomplete="off">
+      <div class="row"><button class="btn" id="aesEnc">🔒 Cifrar</button>
+        <button class="btn sec" id="aesDec">🔓 Descifrar</button></div>
+      <label>Texto cifrado (Base64)</label>
+      <div class="out" id="aesOut"><span class="dim">cifra el mensaje para ver el resultado…</span></div>
+      <div class="feedback" id="aesFb"></div>
+      <div class="para-que"><span class="ic">💡</span><div><b>Para qué sirve:</b> AES protege WhatsApp, tu WiFi (WPA2) y los discos cifrados. <b>El problema que deja abierto:</b> ¿cómo le paso la llave a la otra persona sin que la intercepten? Eso lo resuelve la siguiente forma.</div></div>
+    </div>
+    <div class="reto">🧪 <div><b>Pruébalo (en parejas):</b> cifra un mensaje con la llave <code>birria</code> y pásale <b>solo el texto cifrado</b> a tu compañero, sin la llave — ¿puede abrirlo? Luego cambia <b>una sola letra</b> de la llave e intenta descifrar: tampoco abre. La llave lo es todo.</div></div>
+  </section>
+
+  <!-- 5. DOS FORMAS -->
+  <section class="block">
+    <div class="ey"><span class="no">5</span><span>La bifurcación</span></div>
+    <h2>Hay dos formas de cifrar: con una llave… o con dos</h2>
+    <p>Hasta aquí viste <b>una</b> forma: una sola llave que cierra y abre (el AES de hace rato). Funciona increíble… hasta que tienes que pasarle esa llave a alguien que está lejos, por una red donde puede haber alguien escuchando. Ahí nace la <b>segunda</b> forma.</p>
+    <div class="rsa-explain">
+      <div class="rcard"><h4>Forma 1 · Una llave (simétrico)</h4><p>La <b>misma</b> llave cierra y abre. Rapidísima. Su pega: ¿cómo te comparto esa llave sin que me la roben en el camino? 🏠 Como la llave de tu casa: tú y tu roomie tienen la misma copia.</p></div>
+      <div class="rcard"><h4>Forma 2 · Dos llaves (asimétrico)</h4><p>Un <b>par</b> de llaves. Una <b>solo cifra</b> (cierra), la otra <b>solo descifra</b> (abre). No se comparte ningún secreto. 📮 Como un buzón: todos meten carta por la ranura, solo tú lo abres.</p></div>
+    </div>
+    <div class="para-que"><span class="ic">🤯</span><div><b>El clic mental:</b> en la Forma 2, la llave que <b>cierra NO es la que abre</b>. Son pareja, pero hacen cosas opuestas: una cifra, la otra descifra. Suena raro porque rompe la costumbre de "una sola llave para todo" — y justo por eso es tan poderosa.</div></div>
+
+    <p>Mira el viaje de un mensaje con cada forma, paso a paso:</p>
+    <div class="compare2" id="compare2">
+      <div class="scene sym">
+        <h4>🔑 Forma 1 · una llave</h4>
+        <div class="fsteps">
+          <div class="fs"><span class="fsic">📝</span><span>Ana escribe el mensaje</span></div>
+          <div class="fs"><span class="fsic">🔒</span><span>lo <b>cierra</b> con <b class="same">🔑 llave A</b></span></div>
+          <div class="fs"><span class="fsic">✈️</span><span>viaja a Beto</span></div>
+          <div class="fs"><span class="fsic">🔓</span><span>Beto <b>abre</b> con <b class="same">🔑 la MISMA llave A</b></span></div>
+        </div>
+        <div class="punch"><span class="same">↑ Cierra y abre la misma llave.</span></div>
+      </div>
+      <div class="scene asym">
+        <h4>🔒🔑 Forma 2 · dos llaves</h4>
+        <div class="fsteps">
+          <div class="fs"><span class="fsic">📝</span><span>Ana escribe el mensaje</span></div>
+          <div class="fs"><span class="fsic">🔒</span><span>lo <b>cifra</b> con <b class="diff">🔒 la pública de Beto</b></span></div>
+          <div class="fs"><span class="fsic">✈️</span><span>viaja a Beto</span></div>
+          <div class="fs"><span class="fsic">🔑</span><span>Beto lo <b>descifra</b> con <b class="diff">🔑 su privada</b></span></div>
+        </div>
+        <div class="punch"><span class="diff">↑ Una cierra, otra abre.</span></div>
+      </div>
+    </div>
+    <div class="row"><button class="btn" id="cmpPlay">▶ Ver las dos, paso a paso</button></div>
+    <p style="margin-top:14px">En la siguiente sección le entramos <b>a fondo</b> a la de dos llaves: de dónde salen, por qué una puede ser pública sin riesgo, y la pruebas tú en vivo.</p>
+  </section>
+
+  <!-- 6. ASIMÉTRICO -->
+  <section class="block">
+    <div class="ey"><span class="no">6</span><span>Aplicado · asimétrico</span></div>
+    <h2>RSA: dos llaves, una pública y una privada</h2>
+    <p>La idea que cambió todo (se llama <b>RSA</b>, por sus creadores <b>R</b>ivest, <b>S</b>hamir y <b>A</b>dleman). Tienes <b>un par de llaves</b>. La <b>pública</b> la repartes a todos — es como un <b>buzón con ranura</b>: cualquiera deposita.
+    La <b>privada</b> solo la tienes tú — es la llave que <b>abre</b> el buzón. Lo que se cierra con la pública solo se abre con la privada.</p>
+
+    <div class="rsa-explain">
+      <div class="rcard pub"><h4>🔓 La llave pública</h4><p>La repartes sin miedo: la publicas, la mandas por correo, la pones en tu web. Solo sirve para <b>cerrar</b> (cifrar) o para <b>verificar</b> una firma. Con ella no se puede abrir nada.</p></div>
+      <div class="rcard priv"><h4>🔒 La llave privada</h4><p>Jamás sale de tu equipo. Es la única que <b>abre</b> (descifra) lo que se cerró con tu pública, y la única que puede <b>firmar</b> en tu nombre.</p></div>
+    </div>
+    <p>Las dos nacen juntas, de un mismo cálculo, y quedan <b>matemáticamente ligadas</b>: lo que una cierra, solo la otra abre. La clave está en que, teniendo la pública, <b>no se puede deducir la privada</b> en un tiempo razonable (RSA se apoya en lo difícil que es factorizar números enormes). Por eso regalar la pública es seguro.</p>
+
+    <div class="paint">
+      <h4>🎨 ¿De dónde sale una llave compartida? El truco de las pinturas</h4>
+      <p class="cap" style="font-size:.9rem;color:var(--muted);margin:0 0 4px">Cómo dos personas acuerdan un secreto <b>a la vista de todos</b> sin que el espía lo saque. Es la idea detrás del candado 🔒 de HTTPS.</p>
+      <div class="paintrow">
+        <div class="swatch"><div class="dot" id="pAnaSec"></div>Ana: secreto</div>
+        <div class="swatch"><div class="dot" id="pCommon"></div>+ público</div>
+        <div class="swatch"><div class="dot" id="pAnaMix"></div>= mezcla Ana</div>
+        <div class="swatch"><div class="dot" id="pAnaFin"></div>🔑 llave Ana</div>
+      </div>
+      <div class="paintrow">
+        <div class="swatch"><div class="dot" id="pBetoSec"></div>Beto: secreto</div>
+        <div class="swatch"><div class="dot" id="pBCommon"></div>+ público</div>
+        <div class="swatch"><div class="dot" id="pBetoMix"></div>= mezcla Beto</div>
+        <div class="swatch"><div class="dot" id="pBetoFin"></div>🔑 llave Beto</div>
+      </div>
+      <div class="paintstep" id="pCap">Dale a reproducir para ver cómo llegan al mismo color sin mandarlo nunca.</div>
+      <div class="eve" id="pEve" hidden></div>
+      <div class="row"><button class="btn" id="paintPlay">▶ Ver la mezcla, paso a paso</button></div>
+    </div>
+
+    <p>Y sirve en los dos sentidos:</p>
+    <div class="rsa-explain">
+      <div class="rcard pub"><h4>Confidencialidad →</h4><p>Alguien te escribe: cifra con <b>tu pública</b> y solo tú abres con <b>tu privada</b>. Esto resuelve el hueco del AES: ya no hay que compartir una llave secreta de antemano.</p></div>
+      <div class="rcard priv"><h4>Autenticidad / firma ←</h4><p>Al revés: tú firmas con <b>tu privada</b> y cualquiera verifica con <b>tu pública</b> que fuiste tú y que nadie alteró el mensaje. Esa es la firma digital.</p></div>
+    </div>
+    <details class="qa"><summary>Pero… ¿cómo puede ser pública una llave y seguir siendo segura?</summary>
+      <p>Porque las dos llaves hacen cosas <b>distintas</b>: la pública solo cierra y verifica; la privada solo abre y firma. Es como repartir <b>candados abiertos</b> con tu nombre: cualquiera puede cerrar uno y mandártelo, pero la única llave que los abre la tienes tú. Dar el candado nunca revela la llave.</p></details>
+    <p class="usechips"><span>HTTPS 🔒</span><span>SSH</span><span>firmar commits de git</span><span>correo (PGP)</span><span>wallets cripto</span></p>
+    <div class="demo">
+      <h3>Demo · RSA-2048 real (Web Crypto)</h3>
+      <div class="row"><button class="btn" id="rsaGen">🔑 Generar par de llaves</button></div>
+      <div class="keybox">
+        <div class="keycol pub"><div class="lab">🔓 Pública (se reparte)</div><div class="out" id="rsaPub" style="margin-top:8px;font-size:.72rem"><span class="dim">—</span></div></div>
+        <div class="keycol priv"><div class="lab">🔒 Privada (solo tú)</div><div class="out" id="rsaPriv" style="margin-top:8px;font-size:.72rem"><span class="dim">—</span></div></div>
+      </div>
+      <label for="rsaMsg">Mensaje (se cifra con la pública)</label>
+      <input type="text" id="rsaMsg" value="nos vemos en el lab" autocomplete="off">
+      <div class="row"><button class="btn" id="rsaEnc">🔒 Cifrar con pública</button>
+        <button class="btn sec" id="rsaDec">🔓 Descifrar con privada</button></div>
+      <label>Resultado</label>
+      <div class="out" id="rsaOut"><span class="dim">genera las llaves y cifra…</span></div>
+      <div class="feedback" id="rsaFb"></div>
+      <div class="para-que"><span class="ic">💡</span><div><b>Para qué sirve:</b> resuelve el "¿cómo comparto la llave?". Cualquiera te cifra con tu pública; solo tú abres con la privada. Además, al revés, firma <b>digital</b>: si ciframos con la privada, todos verifican con la pública que fuiste tú. Es la base de HTTPS, de firmar correos y de las criptomonedas.</div></div>
+    </div>
+    <div class="reto">🧪 <div><b>Pruébalo:</b> genera el par, cifra <code>hola</code> con la <b>pública</b> y ábrelo con la <b>privada</b>. Ahora piensa: si alguien tuviera <b>solo</b> tu pública, ¿podría abrir tu mensaje? (No — por eso puedes repartirla sin miedo.)</div></div>
+  </section>
+
+  <!-- 7. HTTPS -->
+  <section class="block">
+    <div class="ey"><span class="no">7</span><span>Cómo se juntan</span></div>
+    <h2>El 🔒 del navegador usa las dos</h2>
+    <p>Ni el simétrico ni el asimétrico solos. HTTPS los combina para quedarse con lo mejor de cada uno:</p>
+    <div class="flow">
+      <div class="step"><span class="n">1</span><div>Tu navegador y el servidor usan <b>asimétrico (RSA/ECDHE)</b> solo para ponerse de acuerdo en una llave secreta, sin que nadie en medio la vea.</div></div>
+      <div class="step"><span class="n">2</span><div>Con esa llave ya compartida, cambian a <b>simétrico (AES)</b> para toda la conversación, porque es mucho más rápido.</div></div>
+      <div class="step"><span class="n">3</span><div>El <b>candado</b> aparece. Todo lo que mandas va en el "sobre cerrado".</div></div>
+    </div>
+    <div class="para-que"><span class="ic">💡</span><div><b>Para qué sirve:</b> cuando revisen una web en el pentest de la U3 y vean <code>https</code> con candado, sabrán qué protege (el transporte) y qué <b>no</b> (lo que el servidor haga con sus datos después). El candado no significa "sitio confiable", significa "canal cifrado".</div></div>
+  </section>
+
+  <!-- 8. CIERRE -->
+  <section class="block">
+    <div class="ey"><span class="no">8</span><span>Recuperación</span></div>
+    <h2>¿Qué usarías en cada caso?</h2>
+    <p>Sin ver arriba. Elige:</p>
+    <div id="quiz"></div>
+  </section>
+
+  <p class="foot">Todo el cifrado de esta página corre en tu navegador con Web Crypto · Hacking Ético (Fundamentos) V2261</p>
+</div>
+
+<script>
+/* ---------- utilidades ---------- */
+var enc=new TextEncoder(), dec=new TextDecoder();
+function b64utf8(s){return btoa(unescape(encodeURIComponent(s)))}
+function bytesToB64(bytes){var s="";for(var i=0;i<bytes.length;i++)s+=String.fromCharCode(bytes[i]);return btoa(s)}
+function b64ToBytes(b){var bin=atob(b);var out=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)out[i]=bin.charCodeAt(i);return out}
+function concatB(){var t=0,i,a=arguments;for(i=0;i<a.length;i++)t+=a[i].length;var o=new Uint8Array(t),off=0;for(i=0;i<a.length;i++){o.set(a[i],off);off+=a[i].length}return o}
+function caesar(s,sh){return s.replace(/[a-záéíóúñü]/gi,function(c){
+  var low="abcdefghijklmnopqrstuvwxyz";var up=low.toUpperCase();
+  var i=low.indexOf(c); if(i>-1)return low[(i+sh)%26];
+  var j=up.indexOf(c); if(j>-1)return up[(j+sh)%26];
+  return c;});}
+
+/* ---------- 2. César ---------- */
+var cIn=document.getElementById("cesarIn"),cSh=document.getElementById("cesarShift"),
+    cVal=document.getElementById("cesarVal"),cOut=document.getElementById("cesarOut");
+function renderCesar(){cVal.textContent=cSh.value;cOut.textContent=caesar(cIn.value,parseInt(cSh.value,10))||"…";}
+cIn.addEventListener("input",renderCesar);cSh.addEventListener("input",renderCesar);renderCesar();
+
+/* ---------- disco de César (rueda giratoria) ---------- */
+(function(){
+  var AL="ABCDEFGHIJKLMNOPQRSTUVWXYZ",NS="http://www.w3.org/2000/svg";
+  var cx=200,cy=200,Rout=168,Rin=120;
+  var rOut=document.getElementById("ring-out"),rIn=document.getElementById("ring-in"),ptr=document.getElementById("pointer");
+  var oT=[],oC=[],iT=[],iC=[];
+  function pos(i,R){var deg=-90+i*(360/26),a=deg*Math.PI/180;return [cx+R*Math.cos(a),cy+R*Math.sin(a),deg]}
+  function mk(tag){return document.createElementNS(NS,tag)}
+  for(var i=0;i<26;i++){
+    var po=pos(i,Rout),c=mk("circle");c.setAttribute("cx",po[0]);c.setAttribute("cy",po[1]);c.setAttribute("r",12.5);c.setAttribute("fill","transparent");rOut.appendChild(c);oC.push(c);
+    var t=mk("text");t.setAttribute("x",po[0]);t.setAttribute("y",po[1]);t.setAttribute("text-anchor","middle");t.setAttribute("dominant-baseline","central");t.textContent=AL[i];rOut.appendChild(t);oT.push(t);
+    var pi=pos(i,Rin),c2=mk("circle");c2.setAttribute("cx",pi[0]);c2.setAttribute("cy",pi[1]);c2.setAttribute("r",11.5);c2.setAttribute("fill","transparent");rIn.appendChild(c2);iC.push(c2);
+    var t2=mk("text");t2.setAttribute("x",pi[0]);t2.setAttribute("y",pi[1]);t2.setAttribute("text-anchor","middle");t2.setAttribute("dominant-baseline","central");t2.textContent=AL[i];rIn.appendChild(t2);iT.push(t2);
+  }
+  function setRot(sh){rIn.style.transform="rotate("+(-sh*(360/26))+"deg)"}
+  function clearLit(){oT.forEach(function(x){x.classList.remove("lit-out")});oC.forEach(function(x){x.classList.remove("lit-out")});iT.forEach(function(x){x.classList.remove("lit-in")});iC.forEach(function(x){x.classList.remove("lit-in")});ptr.innerHTML=""}
+  function litPair(i,sh){
+    clearLit();oT[i].classList.add("lit-out");oC[i].classList.add("lit-out");
+    var ci=(i+sh)%26;iT[ci].classList.add("lit-in");iC[ci].classList.add("lit-in");
+    var deg=(-90+i*(360/26))*Math.PI/180,ln=mk("line");
+    ln.setAttribute("x1",cx+(Rout-26)*Math.cos(deg));ln.setAttribute("y1",cy+(Rout-26)*Math.sin(deg));
+    ln.setAttribute("x2",cx+(Rin+18)*Math.cos(deg));ln.setAttribute("y2",cy+(Rin+18)*Math.sin(deg));ptr.appendChild(ln);
+  }
+  var elIn=document.getElementById("cesarIn"),elSh=document.getElementById("cesarShift"),
+      sBox=document.getElementById("spellout"),mLine=document.getElementById("mapline"),sBtn=document.getElementById("spellBtn");
+  var timer=null;
+  function spell(){
+    if(timer){clearInterval(timer);timer=null}
+    var w=elIn.value.toUpperCase(),sh=+elSh.value,p=0,built="";
+    sBox.innerHTML="";mLine.innerHTML="";clearLit();
+    timer=setInterval(function(){
+      if(p>=w.length){clearInterval(timer);timer=null;clearLit();sBox.textContent=built;mLine.innerHTML="<b>listo</b> — "+w.length+" caracteres";return}
+      var ch=w[p],idx=AL.indexOf(ch);
+      if(idx>-1){var ci=(idx+sh)%26;litPair(idx,sh);built+=AL[ci];mLine.innerHTML=ch+" &rarr; <b>"+AL[ci]+"</b> &nbsp;(corre "+sh+" lugares)";}
+      else{built+=ch;clearLit();mLine.innerHTML="&laquo;espacio o símbolo&raquo; pasa igual";}
+      sBox.innerHTML=built.slice(0,-1).replace(/ /g,"&nbsp;")+'<span class="cur">'+(built.slice(-1)===" "?"&nbsp;":built.slice(-1))+'</span>';
+      p++;
+    },480);
+  }
+  if(elSh){elSh.addEventListener("input",function(){setRot(+elSh.value)});setRot(+elSh.value)}
+  if(sBtn)sBtn.addEventListener("click",spell);
+})();
+
+/* ---------- 3. triage ---------- */
+var tIn=document.getElementById("triageIn");
+async function sha256hex(t){var h=await crypto.subtle.digest("SHA-256",enc.encode(t));
+  return Array.prototype.map.call(new Uint8Array(h),function(b){return b.toString(16).padStart(2,"0")}).join("");}
+async function renderTriage(){
+  var v=tIn.value;
+  document.getElementById("t_b64").textContent=v?b64utf8(v):"—";
+  document.getElementById("t_cif").textContent=v?caesar(v,5):"—";
+  document.getElementById("t_hash").textContent=v?(await sha256hex(v)):"—";
+}
+tIn.addEventListener("input",renderTriage);renderTriage();
+
+/* ---------- 4. AES ---------- */
+async function deriveAes(pass,salt){
+  var km=await crypto.subtle.importKey("raw",enc.encode(pass),"PBKDF2",false,["deriveKey"]);
+  return crypto.subtle.deriveKey({name:"PBKDF2",salt:salt,iterations:100000,hash:"SHA-256"},
+    km,{name:"AES-GCM",length:256},false,["encrypt","decrypt"]);
+}
+var aesOut=document.getElementById("aesOut"),aesFb=document.getElementById("aesFb");
+document.getElementById("aesEnc").addEventListener("click",async function(){
+  aesFb.textContent="";
+  try{
+    var salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12));
+    var key=await deriveAes(document.getElementById("aesKey").value,salt);
+    var ct=new Uint8Array(await crypto.subtle.encrypt({name:"AES-GCM",iv:iv},key,enc.encode(document.getElementById("aesMsg").value)));
+    aesOut.textContent=bytesToB64(concatB(salt,iv,ct));
+    aesFb.className="feedback ok";aesFb.textContent="✔ cifrado — ahora cópialo mentalmente y descífralo, o cambia la llave";
+  }catch(e){aesFb.className="feedback no";aesFb.textContent="error: "+e.message}
+});
+document.getElementById("aesDec").addEventListener("click",async function(){
+  aesFb.textContent="";
+  try{
+    var raw=b64ToBytes(aesOut.textContent.trim());
+    var salt=raw.slice(0,16),iv=raw.slice(16,28),ct=raw.slice(28);
+    var key=await deriveAes(document.getElementById("aesKey").value,salt);
+    var pt=await crypto.subtle.decrypt({name:"AES-GCM",iv:iv},key,ct);
+    aesOut.textContent=dec.decode(pt);
+    aesFb.className="feedback ok";aesFb.textContent="✔ descifrado con la llave correcta";
+  }catch(e){aesFb.className="feedback no";aesFb.textContent="✗ no abre: la llave no coincide (o no hay texto cifrado)";}
+});
+
+/* ---------- 5. RSA ---------- */
+var rsaKP=null,rsaCT=null;
+var rsaPub=document.getElementById("rsaPub"),rsaPriv=document.getElementById("rsaPriv"),
+    rsaOut=document.getElementById("rsaOut"),rsaFb=document.getElementById("rsaFb");
+document.getElementById("rsaGen").addEventListener("click",async function(){
+  rsaFb.textContent="generando…";
+  try{
+    rsaKP=await crypto.subtle.generateKey({name:"RSA-OAEP",modulusLength:2048,
+      publicExponent:new Uint8Array([1,0,1]),hash:"SHA-256"},true,["encrypt","decrypt"]);
+    var spki=new Uint8Array(await crypto.subtle.exportKey("spki",rsaKP.publicKey));
+    var pk8=new Uint8Array(await crypto.subtle.exportKey("pkcs8",rsaKP.privateKey));
+    rsaPub.textContent=bytesToB64(spki).slice(0,88)+"…";
+    rsaPriv.textContent=bytesToB64(pk8).slice(0,88)+"…";
+    rsaCT=null;rsaOut.innerHTML='<span class="dim">llaves listas. ahora cifra.</span>';
+    rsaFb.className="feedback ok";rsaFb.textContent="✔ par de llaves generado";
+  }catch(e){rsaFb.className="feedback no";rsaFb.textContent="error: "+e.message}
+});
+document.getElementById("rsaEnc").addEventListener("click",async function(){
+  if(!rsaKP){rsaFb.className="feedback no";rsaFb.textContent="primero genera las llaves";return}
+  try{
+    var ct=new Uint8Array(await crypto.subtle.encrypt({name:"RSA-OAEP"},rsaKP.publicKey,enc.encode(document.getElementById("rsaMsg").value)));
+    rsaCT=ct;rsaOut.textContent=bytesToB64(ct).slice(0,120)+"…";
+    rsaFb.className="feedback ok";rsaFb.textContent="✔ cifrado con la llave pública — solo la privada lo abre";
+  }catch(e){rsaFb.className="feedback no";rsaFb.textContent="error (¿mensaje muy largo? RSA cifra poco texto): "+e.message}
+});
+document.getElementById("rsaDec").addEventListener("click",async function(){
+  if(!rsaCT){rsaFb.className="feedback no";rsaFb.textContent="primero cifra un mensaje";return}
+  try{
+    var pt=await crypto.subtle.decrypt({name:"RSA-OAEP"},rsaKP.privateKey,rsaCT);
+    rsaOut.textContent=dec.decode(pt);
+    rsaFb.className="feedback ok";rsaFb.textContent="✔ descifrado con la llave privada";
+  }catch(e){rsaFb.className="feedback no";rsaFb.textContent="error: "+e.message}
+});
+
+/* ---------- 7. quiz ---------- */
+var QUIZ=[
+ {q:"Quieres guardar las contraseñas de los usuarios en tu base de datos sin poder leerlas nunca. ¿Qué usas?",
+  opts:["Base64","Cifrado simétrico (AES)","Hash (SHA-256/bcrypt)"],a:2,
+  exp:"Hash: no se revierte. Guardas la huella, no la contraseña. Para login comparas huellas."},
+ {q:"Encontraste en un .env un valor que termina en '=' y quieres ver qué dice. ¿Qué es, casi seguro?",
+  opts:["Base64 (codificación)","RSA","Un hash"],a:0,
+  exp:"El '=' delata Base64: se lee sin llave. Lo decodificas y listo."},
+ {q:"Dos servidores necesitan acordar una llave secreta por una red donde alguien escucha. ¿Qué familia resuelve esto?",
+  opts:["Simétrico solo","Asimétrico (pública/privada)","Codificación"],a:1,
+  exp:"Asimétrico: reparten la pública sin miedo; solo la privada abre. Es el inicio del handshake de HTTPS."},
+ {q:"Vas a cifrar 2 GB de respaldo en un disco. ¿Qué conviene por velocidad?",
+  opts:["RSA","Simétrico (AES)","Hash"],a:1,
+  exp:"Simétrico (AES) es rápido para mucha data. El asimétrico es lento; se usa para la llave, no para los GB."}
+];
+var quizEl=document.getElementById("quiz");
+QUIZ.forEach(function(item,qi){
+  var d=document.createElement("div");d.className="q";
+  var h='<div class="qt">'+(qi+1)+". "+item.q+'</div>';
+  item.opts.forEach(function(o,oi){h+='<button class="opt" data-q="'+qi+'" data-o="'+oi+'">'+o+'</button>';});
+  h+='<div class="qexp" id="qe'+qi+'"></div>';
+  d.innerHTML=h;quizEl.appendChild(d);
+});
+quizEl.addEventListener("click",function(e){
+  var q=e.target.getAttribute("data-q"),o=e.target.getAttribute("data-o");
+  if(q===null||o===null)return;
+  q=parseInt(q,10);o=parseInt(o,10);
+  var btns=quizEl.querySelectorAll('[data-q="'+q+'"]');
+  btns.forEach(function(b){b.disabled=false;});
+  var correct=QUIZ[q].a;
+  btns.forEach(function(b){
+    var bo=parseInt(b.getAttribute("data-o"),10);
+    b.classList.remove("right","wrong");
+    if(bo===correct)b.classList.add("right");
+    if(bo===o&&o!==correct)b.classList.add("wrong");
+  });
+  document.getElementById("qe"+q).textContent=(o===correct?"✔ ":"✗ ")+QUIZ[q].exp;
+});
+
+/* ---------- animación: dos formas (reveal paso a paso) ---------- */
+(function(){
+  var c=document.getElementById("compare2"),btn=document.getElementById("cmpPlay");
+  if(!c||!btn)return;
+  var timer=null;
+  btn.addEventListener("click",function(){
+    var sym=c.querySelectorAll(".scene.sym .fs"),asy=c.querySelectorAll(".scene.asym .fs"),punch=c.querySelectorAll(".punch");
+    [].forEach.call(c.querySelectorAll(".fs,.punch"),function(e){e.classList.remove("on")});
+    if(timer)clearInterval(timer);
+    var i=0,n=sym.length;
+    timer=setInterval(function(){
+      if(i>=n){clearInterval(timer);timer=null;[].forEach.call(punch,function(p){p.classList.add("on")});return;}
+      sym[i].classList.add("on");if(asy[i])asy[i].classList.add("on");i++;
+    },820);
+  });
+})();
+
+/* ---------- animación: truco de las pinturas (intercambio de llave) ---------- */
+(function(){
+  var YEL="#e3b23c",RED="#cf4b54",BLU="#2f6f9e",ORA="#dd7a2e",GRN="#4a9d5b",BRN="#6e4a2f",GREY="#c9ccc2";
+  var $=function(id){return document.getElementById(id)};
+  var play=$("paintPlay");if(!play)return;
+  var cap=$("pCap"),eve=$("pEve");
+  var timers=[];
+  function set(id,c){var e=$(id);if(e)e.style.background=c}
+  function reset(){
+    timers.forEach(clearTimeout);timers=[];
+    set("pCommon",YEL);set("pBCommon",YEL);set("pAnaSec",RED);set("pBetoSec",BLU);
+    set("pAnaMix",GREY);set("pBetoMix",GREY);set("pAnaFin",GREY);set("pBetoFin",GREY);
+    eve.hidden=true;eve.innerHTML="";
+    cap.innerHTML="Dale a reproducir para ver cómo llegan al mismo color sin mandarlo nunca.";
+  }
+  function run(){
+    reset();
+    timers.push(setTimeout(function(){
+      set("pAnaMix",ORA);set("pBetoMix",GRN);
+      cap.innerHTML="1 · Cada quien mezcla el color <b>público</b> con su color <b>secreto</b>. Ana obtiene naranja, Beto verde.";
+    },500));
+    timers.push(setTimeout(function(){
+      cap.innerHTML="2 · Se <b>intercambian las mezclas en público</b> (naranja ↔ verde). Cualquiera que escuche las ve.";
+    },2100));
+    timers.push(setTimeout(function(){
+      set("pAnaFin",BRN);set("pBetoFin",BRN);
+      cap.innerHTML="3 · Cada quien añade <b>otra vez su secreto</b> a la mezcla que recibió → les sale el <b>mismo café</b>. Esa es la llave compartida, y <b>nunca viajó</b>.";
+    },3700));
+    timers.push(setTimeout(function(){
+      eve.hidden=false;
+      eve.innerHTML="👁️ <b>El espía</b> vio el amarillo, el naranja y el verde… pero “des-mezclar” un color para sacar los secretos es carísimo. No puede llegar al café.";
+    },4000));
+  }
+  play.addEventListener("click",run);
+  reset();
+})();
+
+/* ---------- modo presentación ---------- */
+var slides=[document.querySelector(".hero")].concat([].slice.call(document.querySelectorAll("section.block")));
+var pIdx=0;
+function showSlide(i){
+  pIdx=Math.max(0,Math.min(slides.length-1,i));
+  slides.forEach(function(sl,k){sl.classList.toggle("slide-current",k===pIdx)});
+  var pc=document.getElementById("pCount");if(pc)pc.textContent=(pIdx+1)+" / "+slides.length;
+  window.scrollTo(0,0);if(slides[pIdx])slides[pIdx].scrollTop=0;
+}
+function enterPresent(){document.body.classList.add("present");showSlide(pIdx)}
+function exitPresent(){document.body.classList.remove("present");slides.forEach(function(sl){sl.classList.remove("slide-current")})}
+(function(){
+  var b=document.getElementById("presentBtn");if(b)b.addEventListener("click",enterPresent);
+  var e=document.getElementById("pExit");if(e)e.addEventListener("click",exitPresent);
+  var pv=document.getElementById("pPrev");if(pv)pv.addEventListener("click",function(){showSlide(pIdx-1)});
+  var nx=document.getElementById("pNext");if(nx)nx.addEventListener("click",function(){showSlide(pIdx+1)});
+  document.addEventListener("keydown",function(ev){
+    if(!document.body.classList.contains("present"))return;
+    var tg=(ev.target.tagName||"").toUpperCase();if(tg==="INPUT"||tg==="TEXTAREA")return;
+    if(ev.key==="ArrowRight"||ev.key==="PageDown"||ev.key===" "){showSlide(pIdx+1);ev.preventDefault()}
+    else if(ev.key==="ArrowLeft"||ev.key==="PageUp"){showSlide(pIdx-1);ev.preventDefault()}
+    else if(ev.key==="Escape"){exitPresent()}
+  });
+})();
+
+/* ---------- progreso + tema ---------- */
+var rail=document.getElementById("rail");
+function onScroll(){var h=document.documentElement;var max=h.scrollHeight-h.clientHeight;
+  rail.style.width=(max>0?(h.scrollTop/max*100):0)+"%";}
+document.addEventListener("scroll",onScroll,{passive:true});onScroll();
+var tbtn=document.getElementById("theme");
+tbtn.addEventListener("click",function(){
+  var now=document.documentElement.getAttribute("data-theme");
+  var sysDark=window.matchMedia("(prefers-color-scheme: dark)").matches;
+  var next=now==="dark"?"light":now==="light"?"dark":(sysDark?"light":"dark");
+  document.documentElement.setAttribute("data-theme",next);
+  try{localStorage.setItem("cifrado-theme",next)}catch(e){}
+});
+try{var th=localStorage.getItem("cifrado-theme");if(th)document.documentElement.setAttribute("data-theme",th)}catch(e){}
+</script>
+
+</body></html>
